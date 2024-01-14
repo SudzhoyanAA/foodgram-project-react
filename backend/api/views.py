@@ -26,7 +26,7 @@ User = get_user_model()
 
 
 class CustomDjoserUserViewSet(DjoserUserViewSet):
-
+    '''Костомный пользователь.'''
     @action(
         detail=False, methods=['GET'], permission_classes=[IsAuthenticated]
     )
@@ -36,7 +36,7 @@ class CustomDjoserUserViewSet(DjoserUserViewSet):
 
 
 class UserSubscribeView(APIView):
-
+    '''Подписка на пользователя.'''
     permission_classes = (IsAdminAuthorOrReadOnly,)
 
     def post(self, request, user_id):
@@ -62,6 +62,7 @@ class UserSubscribeView(APIView):
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    '''Рецепт.'''
     queryset = Recipe.objects.all()
     permission_classes = (IsAdminAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -106,6 +107,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
+    '''Ингридиенты.'''
     queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -114,6 +116,7 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UserSubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    '''Получения всех подписок на пользователя.'''
 
     serializer_class = UserSubscribeRepresentSerializer
 
@@ -122,6 +125,7 @@ class UserSubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    '''Тэг.'''
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None

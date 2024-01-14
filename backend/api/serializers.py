@@ -19,6 +19,8 @@ User = get_user_model()
 
 
 class UserSignUpSerializer(UserCreateSerializer):
+    '''Создание пользователя.'''
+
     class Meta(UserCreateSerializer.Meta):
         model = User
         fields = (
@@ -32,6 +34,8 @@ class UserSignUpSerializer(UserCreateSerializer):
 
 
 class UserGetSerializer(UserSerializer):
+    '''Получение информации о пользователе.'''
+
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -50,6 +54,8 @@ class UserGetSerializer(UserSerializer):
 
 
 class UserSubscribeRepresentSerializer(UserGetSerializer):
+    '''Получение информации о подписке.'''
+
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -93,6 +99,8 @@ class UserSubscribeRepresentSerializer(UserGetSerializer):
 
 
 class UserSubscribeSerializer(serializers.ModelSerializer):
+    '''Подписка'''
+
     class Meta:
         model = Subscribe
         fields = '__all__'
@@ -118,18 +126,23 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
+    '''Ингредиенты.'''
+
     class Meta:
         model = Ingredients
         fields = '__all__'
 
 
 class TagSerializer(serializers.ModelSerializer):
+    '''Тэг.'''
     class Meta:
         model = Tag
         fields = '__all__'
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
+    '''Ингредиенты в рецепте.'''
+
     name = serializers.StringRelatedField(
         source='ingredient',
         read_only=True,
@@ -150,6 +163,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
+    '''Получение информации о рецепте.'''
 
     tags = TagSerializer(
         many=True,
@@ -185,6 +199,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class IngredientPostSerializer(serializers.ModelSerializer):
+    '''Добавление ингредиентов в рецепт.'''
+
     id = serializers.IntegerField()
     amount = serializers.IntegerField(
         min_value=MIN_VALUE,
@@ -197,6 +213,8 @@ class IngredientPostSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
+    '''Создание рецептов.'''
+
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True,
@@ -273,6 +291,8 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
+    '''Краткая информация о рецепте.'''
+
     class Meta:
         model = Recipe
         fields = (
@@ -284,6 +304,8 @@ class RecipeShortSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    '''Избранные рецепты.'''
+
     class Meta:
         model = Favorite
         fields = '__all__'
@@ -303,6 +325,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
+    '''Список покупок.'''
 
     class Meta:
         model = ShoppingCart

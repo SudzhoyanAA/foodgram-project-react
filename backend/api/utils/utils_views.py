@@ -10,6 +10,8 @@ from recipe.models import Recipe, RecipeIngredient
 
 
 class RecipeFunctions:
+    '''Добавить/Удалить рецепт.'''
+
     @staticmethod
     def add_recipe(serializer_name, request, recipe):
         serializer = serializer_name(

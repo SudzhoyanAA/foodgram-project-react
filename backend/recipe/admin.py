@@ -2,9 +2,9 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from .models import (
-    User, Ingredients, Recipe, Tag,
-    RecipeIngredient, ShoppingCart,
-    Subscribe, Favorite
+    Favorite, Ingredients, Recipe,
+    RecipeIngredient, ShoppingCart, Subscribe,
+    Tag, User,
 )
 
 

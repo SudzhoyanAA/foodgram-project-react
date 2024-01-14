@@ -8,6 +8,8 @@ from recipe.models import Ingredients, RecipeIngredient
 
 
 class Base64ImageField(serializers.ImageField):
+    '''Декодирование изображения.'''
+
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
