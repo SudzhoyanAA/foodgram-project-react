@@ -1,12 +1,12 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator
 
+from .validators import color_validator, username_validator
 from foodgram.constants import (
     LENGHT_150, LENGHT_254, LENGHT_200,
     MIN_VALUE, MIN_VALUE_MSG, LENGHT_7,
 )
-from .validators import username_validator, color_validator
 
 
 class User(AbstractUser):
