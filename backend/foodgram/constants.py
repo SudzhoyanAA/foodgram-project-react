@@ -1,0 +1,10 @@
+LENGHT_256 = 256
+LENGHT_150 = 150
+LENGHT_254 = 254
+LENGHT_200 = 200
+LENGHT_7 = 7
+MIN_VALUE = 1
+MIN_VALUE_MSG = 'Минимальное значение для поля 1.'
+USER_ME = 'me'
+MIN_VALUE = 1
+MAX_VALUE = 32000
