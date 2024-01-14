@@ -130,3 +130,9 @@ dmypy.json
 
 # .idea
 .idea
+
+# dir
+docs/
+data/
+infra/
+postman-collection/
