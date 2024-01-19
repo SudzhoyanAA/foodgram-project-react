@@ -121,7 +121,7 @@ cd /home/<username>/foodgram
 
 Выполнить сборку приложений:
 ```shell
-sudo docker compose -f docker-compose.prod.yml up -d
+sudo docker compose -f docker-compose.production.yml up -d
 ```
 
 Выполните миграции, соберите статические файлы бэкенда и скопируйте их в /static/static/:
@@ -130,12 +130,6 @@ sudo docker compose -f docker-compose.prod.yml up -d
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /static/static/
-```
-
-На сервере в редакторе nano откройте конфиг Nginx:
-
-```bash
-sudo nano /etc/nginx/sites-enabled/default
 ```
 
 Измените настройки location в секции server:
@@ -177,3 +171,92 @@ Actions secrets:
 - `secrets.SSH_PASSPHRASE`
 - `secrets.TELEGRAM_TO`
 - `secrets.TELEGRAM_TOKEN`
+
+## Примеры запросов к API.
+Получение списка рецептов:
+GET /api/recipes/
+```bash
+{
+  "count": 123,
+  "next": "http://127.0.0.1:8081/api/recipes/?page=2",
+  "previous": "http://127.0.0.1:8081/api/recipes/?page=1",
+  "results": [
+    {
+      "id": 0,
+      "tags": [
+        {
+          "id": 0,
+          "name": "Завтрак",
+          "color": "green",
+          "slug": "breakfast"
+        }
+      ],
+      "author": {
+        "email": "root@root.ru",
+        "id": 0,
+        "username": "Albert",
+        "first_name": "Albert",
+        "last_name": "Sudzhoyan",
+        "is_subscribed": false
+      },
+      "ingredients": [
+        {
+          "id": 0,
+          "name": "Курица",
+          "measurement_unit": "г",
+          "amount": 100
+        }
+      ],
+      "is_favorited": false,
+      "is_in_shopping_cart": false,
+      "name": "string",
+      "image": "https://backend:8081/media/recipes/images/image.jpeg",
+      "text": "string",
+      "cooking_time": 10
+    }
+  ]
+}
+```
+Регистрация пользователя:
+POST /api/users/
+```bash
+{
+  "email": "root@root.ru",
+  "username": "Albert",
+  "first_name": "Albert",
+  "last_name": "Sudzhoyan",
+  "password": "******"
+}
+```
+Подписаться на пользователя:
+POST /api/users/{id}/subscribe/ 
+```bash
+{
+  "email": "root@root.com",
+  "id": 0,
+  "username": "Albert",
+  "first_name": "Albert",
+  "last_name": "Sudzhoyan",
+  "is_subscribed": true,
+  "recipes": [
+    {
+      "id": 0,
+      "name": "string",
+      "image": "https://backend:8081/media/recipes/images/image.jpeg",
+      "cooking_time": 10
+    }
+  ],
+  "recipes_count": 1
+}
+```
+## Автор и доступ.
+Автор - Albert
+Доступ к админ панели:
+login: root@root.ru
+password: 123456
+
+## Используемые технологии.
+- [![Python](https://img.shields.io/badge/Python-3.8-blue.svg)](https://www.python.org/)
+- [![Django](https://img.shields.io/badge/Django-3.2-green.svg)](https://www.djangoproject.com/)
+- [![Nginx](https://img.shields.io/badge/Nginx-latest-brightgreen.svg)](https://nginx.org/)
+- [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12.0-blue.svg)](https://www.postgresql.org/)

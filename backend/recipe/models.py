@@ -1,33 +1,36 @@
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-from .validators import color_validator, username_validator
 from foodgram.constants import (
-    LENGHT_150, LENGHT_254, LENGHT_200,
-    MIN_VALUE, MIN_VALUE_MSG, LENGHT_7,
+    MAX_NAME_LENGTH, MAX_EMAIL_LENGHT, MAX_FIELD_LENGTH,
+    MIN_VALUE, MIN_VALUE_MSG, MAX_COLOR_LENGHT, MAX_INFO_LENGTH
 )
+from .validators import color_validator, username_validator
 
 
 class User(AbstractUser):
+    REQUIRED_FIELDS = ('username', 'password')
+    USERNAME_FIELD = ('email')
+
     username = models.CharField(
         verbose_name='Имя пользователя',
-        max_length=LENGHT_150,
+        max_length=MAX_NAME_LENGTH,
         unique=True,
         validators=[username_validator],
     )
     email = models.EmailField(
         verbose_name='Адрес электронной почты',
-        max_length=LENGHT_254,
+        max_length=MAX_EMAIL_LENGHT,
         unique=True,
     )
     first_name = models.CharField(
         verbose_name='Имя',
-        max_length=LENGHT_150
+        max_length=MAX_NAME_LENGTH
     )
     last_name = models.CharField(
         verbose_name='Фамилия',
-        max_length=LENGHT_150
+        max_length=MAX_NAME_LENGTH
     )
 
     class Meta:
@@ -35,19 +38,16 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
         ordering = ['username']
 
-    def __str__(self):
-        return self.username
-
 
 class Ingredients(models.Model):
     name = models.CharField(
         verbose_name='Название',
-        max_length=LENGHT_200,
+        max_length=MAX_FIELD_LENGTH,
         unique=True
     )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=LENGHT_200,
+        max_length=MAX_FIELD_LENGTH,
     )
 
     class Meta:
@@ -62,18 +62,18 @@ class Ingredients(models.Model):
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='Тег',
-        max_length=LENGHT_200,
+        max_length=MAX_FIELD_LENGTH,
         unique=True
     )
     slug = models.SlugField(
         verbose_name='Слаг',
-        max_length=LENGHT_200,
+        max_length=MAX_FIELD_LENGTH,
         unique=True,
         db_index=True,
     )
     color = models.CharField(
         verbose_name='Цвет',
-        max_length=LENGHT_7,
+        max_length=MAX_COLOR_LENGHT,
         unique=True,
         validators=[color_validator]
     )
@@ -96,7 +96,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         verbose_name='Название',
-        max_length=LENGHT_200,
+        max_length=MAX_FIELD_LENGTH,
     )
     image = models.ImageField(
         verbose_name='Изображение',
@@ -127,7 +127,8 @@ class Recipe(models.Model):
         ordering = ['-id']
 
     def __str__(self):
-        return self.name
+        info_string = f'{self.author} - {self.name}'
+        return info_string[:MAX_INFO_LENGTH]
 
 
 class RecipeIngredient(models.Model):
@@ -152,7 +153,6 @@ class RecipeIngredient(models.Model):
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
         db_table = 'recipes_recipe_ingredient'
-        ordering = ['id']
 
     def __str__(self):
         return (

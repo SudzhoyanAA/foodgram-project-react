@@ -1,11 +1,15 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.safestring import mark_safe
 
 from .models import (
     Favorite, Ingredients, Recipe,
     RecipeIngredient, ShoppingCart, Subscribe,
-    Tag, User,
+    Tag,
 )
+
+User = get_user_model()
 
 
 @admin.register(Ingredients)
@@ -17,7 +21,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class CustomUserAdmin(BaseUserAdmin):
     list_display = ('id', 'username', 'email')
     search_fields = ('username', 'email')
     list_filter = ('username', 'email')
@@ -41,6 +45,7 @@ class TagAdmin(admin.ModelAdmin):
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
     extra = 0
+    min_num = 1
 
 
 @admin.register(Recipe)
@@ -50,7 +55,8 @@ class RecipeAdmin(admin.ModelAdmin):
     list_filter = ('name', 'author', 'tags')
     list_display_links = ('name',)
     inlines = (RecipeIngredientInline,)
-    readonly_fields = ['favorites_amount']
+    readonly_fields = ('favorites_amount',)
+    filter_horizontal = ('tags',)
 
     @admin.display(description='Добавлено в избранное')
     def favorites_amount(self, obj):
