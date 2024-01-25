@@ -251,6 +251,7 @@ POST /api/users/{id}/subscribe/
 ```
 ## Автор и доступ.
 Автор - Albert
+URL - albert-foodgram.ddns.net
 Доступ к админ панели:
 login: root@root.ru
 password: 123456

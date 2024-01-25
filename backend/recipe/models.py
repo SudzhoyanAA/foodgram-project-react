@@ -8,6 +8,17 @@ from foodgram.constants import (
 )
 from .validators import color_validator, username_validator
 
+# Вообщем по поводу разделение проекта полностью и избавлением директории api.
+# При разделение логики именно моделей, сыпется БД и возникают
+# какие то странные ошибки. Просидел несколько дней исправляя их,
+# в итоге уперся
+# В одну ошибку связанную с приватным ключом при добавлении
+# ингредиентов в рецепты.
+# Поэтому сделал так и отправляю так, писал в пачку тебе,
+# но понимаю, что я не один.
+# Вижу ожин выхож, если все таки нужно разделить и модели,
+# это полностью начинать заново.
+
 
 class User(AbstractUser):
     REQUIRED_FIELDS = ('username', 'password')
@@ -126,6 +137,7 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
         ordering = ['-id']
 
+# Тут создается строка автор - рецепт и возвращается подстрока с ограничением.
     def __str__(self):
         info_string = f'{self.author} - {self.name}'
         return info_string[:MAX_INFO_LENGTH]
@@ -185,9 +197,12 @@ class Subscribe(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique_user_author',
+                condition=models.Q(user=models.F('author')),
             )
         ]
 
+# думал через метод clean сделать, но ты вроде в 12 спринте говорил,
+# что так лучше не делать.
     def __str__(self):
         return f'{self.user} подписчик автора - {self.author}'
 

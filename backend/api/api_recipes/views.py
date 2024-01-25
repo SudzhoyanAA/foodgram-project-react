@@ -1,78 +1,25 @@
-from django.contrib.auth import get_user_model
-from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet as DjoserUserViewSet
 from django.db.models import Sum
 from django.http import HttpResponse
 
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from django_filters.rest_framework import DjangoFilterBackend
 
+from api.utils.filters import IngredientFilter, RecipeFilter
+from api.utils.permissoins import IsAdminAuthorOrReadOnly
+from api.utils.utils_views import RecipeFunctions
 from recipe.models import (
     Ingredients, Recipe, RecipeIngredient, ShoppingCart, Favorite, Tag
 )
+from api.api_users.serializers import (
+    ShoppingCartSerializer, FavoriteSerializer
+)
 from .serializers import (
-    ShoppingCartSerializer,
-    UserSubscribeSerializer, UserSubscribeReadSerializer
-)
-from .api_recipes.serializers import (
     IngredientsSerializer, RecipeCreateUpdateSerializer,
-    RecipeGetSerializer, FavoriteSerializer, TagSerializer
+    RecipeGetSerializer, TagSerializer
 )
-from .utils.filters import IngredientFilter, RecipeFilter
-from .utils.permissoins import IsAdminAuthorOrReadOnly
-from .utils.utils_views import RecipeFunctions
-
-
-User = get_user_model()
-
-
-class CustomUserViewSet(DjoserUserViewSet, APIView):
-    """Костомный пользователь."""
-
-    permission_classes = (IsAdminAuthorOrReadOnly,)
-
-    def get_permissions(self):
-        if self.action == 'me':
-            return [IsAuthenticated()]
-        return super().get_permissions()
-
-    def post(self, request, user_id):
-        author = get_object_or_404(User, id=user_id)
-        serializer = UserSubscribeSerializer(
-            data={'user': request.user.id, 'author': author.id},
-            context={'request': request},
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def delete(self, request, user_id):
-        author = get_object_or_404(User, id=user_id)
-        follower = request.user.follower.filter(author=author)
-        if not follower:
-            return Response(
-                {'error': 'Нет подписки на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        follower.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-# У меня не получилось перенести данную вью во вью пользователя ((
-# Почему падают тесты, хотя вроде локально работает все,
-# поэтому оставил пока что так.
-
-
-class UserSubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """Получения всех подписок на пользователя."""
-
-    serializer_class = UserSubscribeReadSerializer
-
-    def get_queryset(self):
-        return User.objects.filter(following__user=self.request.user)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -87,8 +34,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipeCreateUpdateSerializer
 
-# надеюсь я правильно понял, что это замечание могу не трогать так как
-# в RecipeFunctions логика удаления и создания разделена.
     @action(
         detail=True,
         methods=['post', 'delete'],

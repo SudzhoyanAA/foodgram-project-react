@@ -3,17 +3,14 @@ from django.core.files.base import ContentFile
 from django.forms import ValidationError
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
+from api.api_users.serializers import UserGetSerializer
+from api.utils.check_functions import add_ingredients, check_recipe
 from foodgram.constants import MIN_VALUE, MAX_VALUE
 from recipe.models import (
     Ingredients, Recipe, RecipeIngredient,
     Favorite, ShoppingCart, Tag
 )
-from api.utils.check_functions import (
-    add_ingredients, check_recipe
-)
-from api.api_users.serializers import UserGetSerializer
 
 
 class Base64ImageField(serializers.ImageField):
@@ -193,37 +190,3 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         if len(set(tags)) != len(tags):
             raise ValidationError('Теги должны быть уникальными!')
         return tags
-
-
-class RecipeShortSerializer(serializers.ModelSerializer):
-    """Краткая информация о рецепте."""
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time',
-        )
-
-
-class FavoriteSerializer(serializers.ModelSerializer):
-    """Избранные рецепты."""
-
-    class Meta:
-        model = Favorite
-        fields = '__all__'
-        validators = [
-            UniqueTogetherValidator(
-                queryset=model.objects.all(),
-                fields=['user', 'recipe'],
-                message='Рецепт уже добавлен в избранное.',
-            )
-        ]
-
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        return RecipeShortSerializer(
-            instance.recipe, context={'request': request}
-        ).data
