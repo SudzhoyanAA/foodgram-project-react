@@ -1,53 +1,14 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
 
 from foodgram.constants import (
-    MAX_NAME_LENGTH, MAX_EMAIL_LENGHT, MAX_FIELD_LENGTH,
-    MIN_VALUE, MIN_VALUE_MSG, MAX_COLOR_LENGHT, MAX_INFO_LENGTH
+    MAX_FIELD_LENGTH, MIN_VALUE, MIN_VALUE_MSG,
+    MAX_COLOR_LENGHT, MAX_INFO_LENGTH
 )
-from .validators import color_validator, username_validator
+from .validators import color_validator
 
-# Вообщем по поводу разделение проекта полностью и избавлением директории api.
-# При разделение логики именно моделей, сыпется БД и возникают
-# какие то странные ошибки. Просидел несколько дней исправляя их,
-# в итоге уперся
-# В одну ошибку связанную с приватным ключом при добавлении
-# ингредиентов в рецепты.
-# Поэтому сделал так и отправляю так, писал в пачку тебе,
-# но понимаю, что я не один.
-# Вижу ожин выхож, если все таки нужно разделить и модели,
-# это полностью начинать заново.
-
-
-class User(AbstractUser):
-    REQUIRED_FIELDS = ('username', 'password')
-    USERNAME_FIELD = ('email')
-
-    username = models.CharField(
-        verbose_name='Имя пользователя',
-        max_length=MAX_NAME_LENGTH,
-        unique=True,
-        validators=[username_validator],
-    )
-    email = models.EmailField(
-        verbose_name='Адрес электронной почты',
-        max_length=MAX_EMAIL_LENGHT,
-        unique=True,
-    )
-    first_name = models.CharField(
-        verbose_name='Имя',
-        max_length=MAX_NAME_LENGTH
-    )
-    last_name = models.CharField(
-        verbose_name='Фамилия',
-        max_length=MAX_NAME_LENGTH
-    )
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-        ordering = ['username']
+User = get_user_model()
 
 
 class Ingredients(models.Model):
@@ -175,36 +136,34 @@ class RecipeIngredient(models.Model):
         )
 
 
-class Subscribe(models.Model):
+class ShoppingCart(models.Model):
     user = models.ForeignKey(
-        User,
-        verbose_name='Подписчик',
-        on_delete=models.CASCADE,
-        related_name='follower'
-    )
-    author = models.ForeignKey(
         User,
         verbose_name='Автор',
         on_delete=models.CASCADE,
-        related_name='following'
+        related_name='carts'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        verbose_name='Рецепт',
+        on_delete=models.CASCADE,
+        related_name='carts'
     )
 
     class Meta:
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-        ordering = ['author']
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
+        db_table = 'recipes_shopping_cart'
+        ordering = ['id']
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'author'],
-                name='unique_user_author',
-                condition=models.Q(user=models.F('author')),
+                fields=['user', 'recipe'],
+                name='unique_user_cart',
             )
         ]
 
-# думал через метод clean сделать, но ты вроде в 12 спринте говорил,
-# что так лучше не делать.
     def __str__(self):
-        return f'{self.user} подписчик автора - {self.author}'
+        return f'{self.user} - {self.recipe}'
 
 
 class Favorite(models.Model):
@@ -229,36 +188,6 @@ class Favorite(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
                 name='unique_user_favorite',
-            )
-        ]
-
-    def __str__(self):
-        return f'{self.user} - {self.recipe}'
-
-
-class ShoppingCart(models.Model):
-    user = models.ForeignKey(
-        User,
-        verbose_name='Автор',
-        on_delete=models.CASCADE,
-        related_name='carts'
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        verbose_name='Рецепт',
-        on_delete=models.CASCADE,
-        related_name='carts'
-    )
-
-    class Meta:
-        verbose_name = 'Список покупок'
-        verbose_name_plural = 'Списки покупок'
-        db_table = 'recipes_shopping_cart'
-        ordering = ['id']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user', 'recipe'],
-                name='unique_user_cart',
             )
         ]
 

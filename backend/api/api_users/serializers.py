@@ -7,7 +7,8 @@ from rest_framework.validators import UniqueTogetherValidator
 from djoser.serializers import UserCreateSerializer, UserSerializer
 
 from api.utils.check_functions import check_subscribe
-from recipe.models import Favorite, Recipe, ShoppingCart, Subscribe
+from recipe.models import ShoppingCart, Favorite
+from user.models import Subscribe
 
 User = get_user_model()
 
@@ -47,19 +48,6 @@ class UserSignUpSerializer(UserCreateSerializer):
         )
 
 
-class RecipeShortSerializer(serializers.ModelSerializer):
-    """Краткая информация о рецепте."""
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time',
-        )
-
-
 class FavoriteSerializer(serializers.ModelSerializer):
     """Избранные рецепты."""
 
@@ -75,6 +63,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
+        from api.api_recipes.serializers import RecipeShortSerializer
         request = self.context.get('request')
         return RecipeShortSerializer(
             instance.recipe, context={'request': request}
@@ -111,6 +100,7 @@ class UserSubscribeReadSerializer(UserGetSerializer):
         )
 
     def get_recipes(self, obj):
+        from api.api_recipes.serializers import RecipeShortSerializer
         request = self.context.get('request')
         recipes_limit = None
         if request:

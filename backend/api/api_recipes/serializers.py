@@ -1,27 +1,15 @@
-import base64
-from django.core.files.base import ContentFile
 from django.forms import ValidationError
 
 from rest_framework import serializers
 
 from api.api_users.serializers import UserGetSerializer
 from api.utils.check_functions import add_ingredients, check_recipe
+from api.utils.serializers import Base64ImageField
 from foodgram.constants import MIN_VALUE, MAX_VALUE
 from recipe.models import (
     Ingredients, Recipe, RecipeIngredient,
-    Favorite, ShoppingCart, Tag
+    Favorite, Tag, ShoppingCart
 )
-
-
-class Base64ImageField(serializers.ImageField):
-    """Декодирование изображения."""
-
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
 
 
 class IngredientsSerializer(serializers.ModelSerializer):
@@ -102,16 +90,17 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 class IngredientPostSerializer(serializers.ModelSerializer):
     """Добавление ингредиентов в рецепт."""
-
+# id нужен для строчки 157.
     id = serializers.IntegerField()
-    amount = serializers.IntegerField(
-        min_value=MIN_VALUE,
-        max_value=MAX_VALUE,
-    )
 
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'amount')
+
+    def validate_amount(self, value):
+        if MIN_VALUE <= value <= MAX_VALUE:
+            return value
+        raise serializers.ValidationError("Недопустимое значение для amount.")
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -177,16 +166,29 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         instance.tags.clear()
         instance.tags.set(tags)
-        RecipeIngredient.objects.filter(recipe=instance).delete()
+        instance.ingredients.clear()
         super().update(instance, validated_data)
         add_ingredients(ingredients, instance)
-        instance.save()
         return instance
 
     def to_representation(self, instance):
         return RecipeGetSerializer(instance, context=self.context).data
 
+# Тут я не совсем понял, делаю метод приватным через _ и падают тесты.
     def validate_tags(self, tags):
         if len(set(tags)) != len(tags):
             raise ValidationError('Теги должны быть уникальными!')
         return tags
+
+
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Краткая информация о рецепте."""
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time',
+        )

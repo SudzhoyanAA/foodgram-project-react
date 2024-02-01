@@ -1,22 +1,23 @@
 from django.contrib.auth import get_user_model
-from djoser.views import UserViewSet as DjoserUserViewSet
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.generics import get_object_or_404
+from djoser.views import UserViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.utils.permissoins import IsAdminAuthorOrReadOnly
-from .serializers import UserSubscribeReadSerializer, UserSubscribeSerializer
+from .serializers import (
+    UserSubscribeReadSerializer, UserSubscribeSerializer, UserSignUpSerializer
+)
 
 
 User = get_user_model()
 
 
-class CustomUserViewSet(DjoserUserViewSet, APIView):
+class CustomUserViewSet(UserViewSet, APIView):
     """Костомный пользователь."""
-
     permission_classes = (IsAdminAuthorOrReadOnly,)
 
     def get_permissions(self):
@@ -24,6 +25,8 @@ class CustomUserViewSet(DjoserUserViewSet, APIView):
             return [IsAuthenticated()]
         return super().get_permissions()
 
+# Не понял, использовать защиты в джосер функционал,
+# надо использовать IsAuthenticayed?
     def post(self, request, user_id):
         author = get_object_or_404(User, id=user_id)
         serializer = UserSubscribeSerializer(
@@ -44,6 +47,38 @@ class CustomUserViewSet(DjoserUserViewSet, APIView):
             )
         follower.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def create(self, request, *args, **kwargs):
+        serializer = UserSignUpSerializer(
+            data=request.data, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # @action(
+    #     detail=False, methods=['get'],
+    #     serializer_class=UserSubscribeReadSerializer
+    # )
+    # def subscriptions(self, request):
+    #     return User.objects.filter(following__user=self.request.user)
+
+    # def subscriptions(self, request):
+    #     subscriptions = User.objects.filter(following__user=request.user)
+    #     serializer = UserSubscribeReadSerializer(subscriptions, many=True)
+    #     return Response(serializer.data)
+
+# Так и не получилось разобраться, как встроить это представление.
+# Пробовал по этапно смореть, такое чувство что в моменте
+# обращение к сериализатору все падает.
 
 
 class UserSubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

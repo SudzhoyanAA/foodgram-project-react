@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'djoser',
     'api',
     'recipe',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -113,7 +114,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'recipe.User'
+AUTH_USER_MODEL = 'user.User'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
