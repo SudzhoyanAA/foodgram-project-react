@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'default')
 
-DEBUG = os.getenv('DEBUG', default=False)
+DEBUG = os.getenv('DEBUG') == 'True'
 
 ALLOWED_HOSTS = os.getenv(
     'ALLOWED_HOSTS', default='127.0.0.1, localhost'
@@ -128,9 +128,9 @@ DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
     'SERIALIZERS': {
-        'user_create': 'api.api_users.serializers.UserSignUpSerializer',
-        'user': 'api.api_users.serializers.UserGetSerializer',
-        'current_user': 'api.api_users.serializers.UserGetSerializer',
+        'user_create': 'api.users.serializers.UserSignUpSerializer',
+        'user': 'api.users.serializers.UserGetSerializer',
+        'current_user': 'api.users.serializers.UserGetSerializer',
     },
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],

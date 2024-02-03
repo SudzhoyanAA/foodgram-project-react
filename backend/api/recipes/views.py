@@ -1,20 +1,18 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
 
 from api.utils.filters import IngredientFilter, RecipeFilter
 from api.utils.permissoins import IsAdminAuthorOrReadOnly
+from api.users.serializers import ShoppingCartSerializer, FavoriteSerializer
 from recipe.models import (
     Ingredients, Recipe, RecipeIngredient, Favorite, Tag, ShoppingCart
-)
-from api.api_users.serializers import (
-    ShoppingCartSerializer, FavoriteSerializer
 )
 from .serializers import (
     IngredientsSerializer, RecipeCreateUpdateSerializer,
@@ -109,28 +107,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         user_recipes = Recipe.objects.filter(favorites__user=user)
-        shopping_list = self.generate_shopping_list(user_recipes)
+        ingredients = RecipeIngredient.objects.filter(recipe__in=user_recipes)
+        shopping_list = self.generate_shopping_list(ingredients)
         file_name = f'{user}_shopping_cart.txt'
         response = HttpResponse(shopping_list, content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={file_name}'
         return response
 
-    def generate_shopping_list(self, recipes):
-        ingredients = (
-            RecipeIngredient.objects.filter(recipe__in=recipes)
-            .values(
-                'ingredient__name',
-                'ingredient__measurement_unit',
-            )
-            .annotate(ingredient_amount=Sum('amount'))
-        )
+    def generate_shopping_list(self, ingredients):
+        aggregated_ingredients = ingredients.values(
+            'ingredient__name',
+            'ingredient__measurement_unit',
+        ).annotate(ingredient_amount=Sum('amount'))
+
         shopping_list = 'Список покупок:\n'
 
-        for ingredient in ingredients:
+        for ingredient in aggregated_ingredients:
             name = ingredient['ingredient__name']
             unit = ingredient['ingredient__measurement_unit']
             amount = ingredient['ingredient_amount']
             shopping_list += f"\n{name} - {amount}/{unit}"
+
         return shopping_list
 
 

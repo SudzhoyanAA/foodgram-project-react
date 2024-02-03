@@ -2,21 +2,20 @@ from django.contrib.auth import get_user_model
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.generics import get_object_or_404
-from djoser.views import UserViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from djoser.views import UserViewSet
 
 from api.utils.permissoins import IsAdminAuthorOrReadOnly
 from .serializers import (
-    UserSubscribeReadSerializer, UserSubscribeSerializer, UserSignUpSerializer
+    UserSignUpSerializer, UserSubscribeSerializer, UserSubscribeReadSerializer
 )
 
 
 User = get_user_model()
 
 
-class CustomUserViewSet(UserViewSet, APIView):
+class CustomUserViewSet(UserViewSet):
     """Костомный пользователь."""
     permission_classes = (IsAdminAuthorOrReadOnly,)
 
@@ -25,8 +24,6 @@ class CustomUserViewSet(UserViewSet, APIView):
             return [IsAuthenticated()]
         return super().get_permissions()
 
-# Не понял, использовать защиты в джосер функционал,
-# надо использовать IsAuthenticayed?
     def post(self, request, user_id):
         author = get_object_or_404(User, id=user_id)
         serializer = UserSubscribeSerializer(
@@ -66,19 +63,16 @@ class CustomUserViewSet(UserViewSet, APIView):
 
     # @action(
     #     detail=False, methods=['get'],
-    #     serializer_class=UserSubscribeReadSerializer
+    #     serializer_class=UserSubscribeReadSerializer,
+    #     url_path='subscriptions', url_name='subscriptions'
     # )
-    # def subscriptions(self, request):
-    #     return User.objects.filter(following__user=self.request.user)
-
     # def subscriptions(self, request):
     #     subscriptions = User.objects.filter(following__user=request.user)
     #     serializer = UserSubscribeReadSerializer(subscriptions, many=True)
     #     return Response(serializer.data)
 
-# Так и не получилось разобраться, как встроить это представление.
-# Пробовал по этапно смореть, такое чувство что в моменте
-# обращение к сериализатору все падает.
+# Вообщем эта проблема осталась не решенной.
+# Причем даже ошибок в логах нет, просто путсая белая страница.
 
 
 class UserSubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

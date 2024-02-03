@@ -2,13 +2,13 @@ from django.forms import ValidationError
 
 from rest_framework import serializers
 
-from api.api_users.serializers import UserGetSerializer
+from foodgram.constants import MAX_VALUE, MIN_VALUE
+from api.users.serializers import UserGetSerializer
 from api.utils.check_functions import add_ingredients, check_recipe
-from api.utils.serializers import Base64ImageField
-from foodgram.constants import MIN_VALUE, MAX_VALUE
+from backend.api.utils.base64 import Base64ImageField
 from recipe.models import (
     Ingredients, Recipe, RecipeIngredient,
-    Favorite, Tag, ShoppingCart
+    Favorite, ShoppingCart, Tag
 )
 
 

@@ -1,10 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from foodgram.constants import (
     MAX_NAME_LENGTH, MAX_EMAIL_LENGHT
 )
 from recipe.validators import username_validator
+
+# Если что сайт работает, но видимо что-то с виртуальной машиной,
+# потому что контейнеры запускаются работают, а потом отключаются.
 
 
 class User(AbstractUser):
@@ -42,7 +46,7 @@ class Subscribe(models.Model):
         User,
         verbose_name='Подписчик',
         on_delete=models.CASCADE,
-        related_name='follower'
+        related_name='follower',
     )
     author = models.ForeignKey(
         User,
@@ -59,9 +63,14 @@ class Subscribe(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique_user_author',
-                condition=models.Q(user=models.F('author')),
             )
         ]
+# Сделал через clean все работает, на самого себя нельзя пожписаться.
+# и нельзя создать две одинаковые подписки.
+
+    def clean(self):
+        if self.user == self.author:
+            raise ValidationError('Нельзя подписываться на самого себя.')
 
     def __str__(self):
         return f'{self.user} подписчик автора - {self.author}'

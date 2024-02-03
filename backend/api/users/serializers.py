@@ -1,14 +1,15 @@
-from django.contrib.auth import get_user_model
 from django.forms import ValidationError
 
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from djoser.serializers import UserCreateSerializer, UserSerializer
-
+# Локальные импорты
 from api.utils.check_functions import check_subscribe
-from recipe.models import ShoppingCart, Favorite
+from recipe.models import Favorite, ShoppingCart
 from user.models import Subscribe
+
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -63,7 +64,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        from api.api_recipes.serializers import RecipeShortSerializer
+        from api.recipes.serializers import RecipeShortSerializer
         request = self.context.get('request')
         return RecipeShortSerializer(
             instance.recipe, context={'request': request}
@@ -100,7 +101,7 @@ class UserSubscribeReadSerializer(UserGetSerializer):
         )
 
     def get_recipes(self, obj):
-        from api.api_recipes.serializers import RecipeShortSerializer
+        from api.recipes.serializers import RecipeShortSerializer
         request = self.context.get('request')
         recipes_limit = None
         if request:
