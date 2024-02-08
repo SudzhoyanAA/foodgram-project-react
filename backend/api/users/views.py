@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework import mixins, status, viewsets
+from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,7 +9,7 @@ from djoser.views import UserViewSet
 
 from api.utils.permissoins import IsAdminAuthorOrReadOnly
 from .serializers import (
-    UserSignUpSerializer, UserSubscribeSerializer, UserSubscribeReadSerializer
+    UserSignUpSerializer, UserSubscribeSerializer, UserSubscribeReadSerializer,
 )
 
 
@@ -24,7 +25,13 @@ class CustomUserViewSet(UserViewSet):
             return [IsAuthenticated()]
         return super().get_permissions()
 
-    def post(self, request, user_id):
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserSignUpSerializer
+        return super().get_serializer_class()
+
+    @action(detail=True, methods=['post'], url_path='subscribe')
+    def subscribe(self, request, user_id=None):
         author = get_object_or_404(User, id=user_id)
         serializer = UserSubscribeSerializer(
             data={'user': request.user.id, 'author': author.id},
@@ -34,7 +41,8 @@ class CustomUserViewSet(UserViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, user_id):
+    @action(detail=True, methods=['delete'], url_path='unsubscribe')
+    def unsubscribe(self, request, user_id=None):
         author = get_object_or_404(User, id=user_id)
         follower = request.user.follower.filter(author=author)
         if not follower:
@@ -45,40 +53,13 @@ class CustomUserViewSet(UserViewSet):
         follower.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def create(self, request, *args, **kwargs):
-        serializer = UserSignUpSerializer(
-            data=request.data, context={'request': request}
+    @action(
+        detail=True, methods=['get'], url_path='subscriptions',
+        permission_classes=[IsAuthenticated]
+    )
+    def subscriptions(self, request, *args, **kwargs):
+        queryset = User.objects.filter(following__user=self.request.user)
+        serializer = UserSubscribeReadSerializer(
+            queryset, many=True, context={"request": request}
         )
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    # @action(
-    #     detail=False, methods=['get'],
-    #     serializer_class=UserSubscribeReadSerializer,
-    #     url_path='subscriptions', url_name='subscriptions'
-    # )
-    # def subscriptions(self, request):
-    #     subscriptions = User.objects.filter(following__user=request.user)
-    #     serializer = UserSubscribeReadSerializer(subscriptions, many=True)
-    #     return Response(serializer.data)
-
-# Вообщем эта проблема осталась не решенной.
-# Причем даже ошибок в логах нет, просто путсая белая страница.
-
-
-class UserSubscriptionsViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    """Получения всех подписок на пользователя."""
-
-    serializer_class = UserSubscribeReadSerializer
-
-    def get_queryset(self):
-        return User.objects.filter(following__user=self.request.user)
+        return Response({'results': serializer.data})

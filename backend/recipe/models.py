@@ -98,7 +98,6 @@ class Recipe(models.Model):
         verbose_name_plural = 'Рецепты'
         ordering = ['-id']
 
-# Тут создается строка автор - рецепт и возвращается подстрока с ограничением.
     def __str__(self):
         info_string = f'{self.author} - {self.name}'
         return info_string[:MAX_INFO_LENGTH]

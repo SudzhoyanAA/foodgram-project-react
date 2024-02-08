@@ -65,8 +65,6 @@ class Subscribe(models.Model):
                 name='unique_user_author',
             )
         ]
-# Сделал через clean все работает, на самого себя нельзя пожписаться.
-# и нельзя создать две одинаковые подписки.
 
     def clean(self):
         if self.user == self.author:

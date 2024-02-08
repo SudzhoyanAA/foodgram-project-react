@@ -1,4 +1,3 @@
-from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -115,14 +114,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return response
 
     def generate_shopping_list(self, ingredients):
-        aggregated_ingredients = ingredients.values(
-            'ingredient__name',
-            'ingredient__measurement_unit',
-        ).annotate(ingredient_amount=Sum('amount'))
-
         shopping_list = 'Список покупок:\n'
 
-        for ingredient in aggregated_ingredients:
+        for ingredient in ingredients:
             name = ingredient['ingredient__name']
             unit = ingredient['ingredient__measurement_unit']
             amount = ingredient['ingredient_amount']
