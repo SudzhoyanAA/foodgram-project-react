@@ -5,7 +5,7 @@ from rest_framework import serializers
 from foodgram.constants import MAX_VALUE, MIN_VALUE
 from api.users.serializers import UserGetSerializer
 from api.utils.check_functions import add_ingredients, check_recipe
-from api.utils.custom_image import Base64ImageField
+from api.utils.fields import Base64ImageField
 from recipe.models import (
     Ingredients, Recipe, RecipeIngredient,
     Favorite, ShoppingCart, Tag

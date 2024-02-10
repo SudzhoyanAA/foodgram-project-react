@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -105,8 +106,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 {'error': 'Корзины пользователя не найдены.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        user_recipes = Recipe.objects.filter(favorites__user=user)
-        ingredients = RecipeIngredient.objects.filter(recipe__in=user_recipes)
+        ingredients = (
+            RecipeIngredient.objects.filter(recipe__carts__user=request.user)
+            .values(
+                'ingredient__name',
+                'ingredient__measurement_unit',
+            ).annotate(ingredient_amount=Sum('amount'))
+        )
         shopping_list = self.generate_shopping_list(ingredients)
         file_name = f'{user}_shopping_cart.txt'
         response = HttpResponse(shopping_list, content_type='text/plain')
